@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <defs>
+    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#667eea"/>
+      <stop offset="100%" style="stop-color:#764ba2"/>
+    </linearGradient>
+  </defs>
+  <!-- Background -->
+  <rect x="4" y="4" width="120" height="120" rx="24" ry="24" fill="url(#gradient)"/>
+  <!-- Shield -->
+  <path d="M64 20 L100 35 L100 65 Q100 95 64 110 Q28 95 28 65 L28 35 Z"
+        fill="rgba(255,255,255,0.2)" stroke="white" stroke-width="3"/>
+  <!-- W letter -->
+  <text x="64" y="82" font-family="Arial, sans-serif" font-size="48" font-weight="bold"
+        fill="white" text-anchor="middle">W</text>
+  <!-- Block symbol -->
+  <circle cx="96" cy="96" r="20" fill="#ff5252"/>
+  <rect x="86" y="93" width="20" height="6" fill="white" rx="2"/>
+</svg>
