@@ -1,0 +1,145 @@
+/**
+ * 威软去广告 - 广告屏蔽样式
+ * 威软科技制作
+ */
+
+/* ========== 通用广告选择器 ========== */
+[class*="ad-"]:not([class*="upload"]):not([class*="download"]):not([class*="add"]):not([class*="header"]):not([class*="load"]),
+[class*="-ad"]:not([class*="head"]):not([class*="load"]):not([class*="bread"]),
+[class*="advertisement"],
+[class*="adsense"],
+[id*="ad-"]:not([id*="head"]):not([id*="load"]),
+[id*="-ad"]:not([id*="head"]):not([id*="load"]),
+.pause-ad,
+.video-ad:not(video) {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    height: 0 !important;
+    min-height: 0 !important;
+    max-height: 0 !important;
+    width: 0 !important;
+    min-width: 0 !important;
+    max-width: 0 !important;
+    overflow: hidden !important;
+    position: absolute !important;
+    left: -9999px !important;
+}
+
+/* ========== 优酷 ========== */
+.advertise-layer,
+.ad-layer,
+.youku-layer-ad,
+.yk-ad,
+#player_ad,
+.player-ad-tips,
+.ad-tips,
+.h5-ext-ad,
+.h5-layer-ad,
+.advertise,
+.ads-box,
+[class*="yk_ad"],
+[class*="adv-"],
+.player-loading-ad,
+.video-ad-player {
+    display: none !important;
+}
+
+/* ========== 爱奇艺 ========== */
+.iqp-ad,
+.cupid-wrap,
+.skippable-ad,
+.ad-pause,
+.qy-ad,
+.iqp-ads,
+[class*="cupid"],
+[class*="iqp-ad"],
+.iq-adv,
+.ad-wrap,
+.pause-ad-container,
+#flashbox_ads,
+.qy-player-ad {
+    display: none !important;
+}
+
+/* ========== 腾讯视频 ========== */
+.txp_ad,
+.txp_ads,
+.ad_area,
+#player_pause_ad,
+.txp_pause_ad,
+.mod_ad,
+.ad_center,
+[class*="txp_ad"],
+[class*="player_ad"],
+.tvp_ad,
+.tvp_overlay_ad,
+#adPlayer {
+    display: none !important;
+}
+
+/* ========== 哔哩哔哩 ========== */
+.ad-report,
+.bili-ad,
+.video-card-ad-small,
+.ad-floor,
+.activity-banner,
+.ad-m,
+[class*="ad-report"],
+.slide-ad-exp,
+.video-page-game-card,
+.video-page-special-card {
+    display: none !important;
+}
+
+/* ========== YouTube ========== */
+.ytp-ad-module,
+.ytp-ad-overlay-slot,
+.ytp-ad-text-overlay,
+.ytd-display-ad-renderer,
+.ytd-promoted-sparkles-web-renderer,
+.ytd-companion-slot-renderer,
+.ytd-action-companion-ad-renderer,
+[class*="ytp-ad"],
+.ytp-ad-skip-button-container,
+#player-ads,
+.video-ads,
+.ytd-banner-promo-renderer,
+.ytd-statement-banner-renderer,
+ytd-promoted-video-renderer,
+ytd-compact-promoted-video-renderer {
+    display: none !important;
+}
+
+/* ========== 芒果TV ========== */
+.mango-ad,
+[class*="mgtv-ad"] {
+    display: none !important;
+}
+
+/* ========== 西瓜视频 ========== */
+.xg-ad,
+[class*="xigua-ad"] {
+    display: none !important;
+}
+
+/* ========== 搜狐视频 ========== */
+.x-ad,
+[class*="sohu-ad"] {
+    display: none !important;
+}
+
+/* ========== AcFun ========== */
+.acfun-ad,
+[class*="ac-ad"] {
+    display: none !important;
+}
+
+/* ========== 通用iframe广告 ========== */
+iframe[src*="ad"],
+iframe[src*="advertisement"],
+iframe[src*="doubleclick"],
+iframe[src*="googlesyndication"] {
+    display: none !important;
+}

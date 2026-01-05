@@ -1,0 +1,86 @@
+{
+  "manifest_version": 3,
+  "name": "威软去广告",
+  "version": "1.0.0",
+  "description": "去除各大视频网站广告，保持原始界面不变 - 威软科技制作",
+  "author": "威软科技制作",
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    },
+    "default_title": "威软去广告"
+  },
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting",
+    "webRequest",
+    "declarativeNetRequest"
+  ],
+  "host_permissions": [
+    "*://*.youku.com/*",
+    "*://*.iqiyi.com/*",
+    "*://*.iq.com/*",
+    "*://*.qq.com/*",
+    "*://*.bilibili.com/*",
+    "*://*.mgtv.com/*",
+    "*://*.youtube.com/*",
+    "*://*.ixigua.com/*",
+    "*://*.sohu.com/*",
+    "*://*.le.com/*",
+    "*://*.pptv.com/*",
+    "*://*.tudou.com/*",
+    "*://*.acfun.cn/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.youku.com/*",
+        "*://*.iqiyi.com/*",
+        "*://*.iq.com/*",
+        "*://*.qq.com/*",
+        "*://*.bilibili.com/*",
+        "*://*.mgtv.com/*",
+        "*://*.youtube.com/*",
+        "*://*.ixigua.com/*",
+        "*://*.sohu.com/*",
+        "*://*.le.com/*",
+        "*://*.pptv.com/*",
+        "*://*.tudou.com/*",
+        "*://*.acfun.cn/*"
+      ],
+      "js": ["js/content.js"],
+      "css": ["css/adblock.css"],
+      "run_at": "document_start",
+      "all_frames": true
+    }
+  ],
+  "background": {
+    "service_worker": "js/background.js"
+  },
+  "declarative_net_request": {
+    "rule_resources": [
+      {
+        "id": "ruleset_1",
+        "enabled": true,
+        "path": "rules.json"
+      }
+    ]
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["css/*", "js/*"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}
