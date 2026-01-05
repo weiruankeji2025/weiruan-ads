@@ -1,5 +1,5 @@
 /**
- * 威软去广告 - Content Script
+ * 威软去广告 - Content Script v1.1.0
  * 去除各大视频网站广告，保持原始界面不变
  * 威软科技制作
  */
@@ -9,9 +9,9 @@
 
     // ========== 配置 ==========
     const CONFIG = {
-        debug: false,
-        checkInterval: 500,
-        maxRetries: 100
+        debug: true,
+        checkInterval: 200,
+        youtubeCheckInterval: 100
     };
 
     // ========== 日志工具 ==========
@@ -21,137 +21,7 @@
         error: (msg) => console.error(`[威软去广告] ${msg}`)
     };
 
-    // ========== 通用广告选择器 ==========
-    const COMMON_AD_SELECTORS = [
-        '[class*="ad-"]:not([class*="upload"]):not([class*="download"]):not([class*="add"])',
-        '[class*="-ad"]:not([class*="head"]):not([class*="load"])',
-        '[class*="_ad"]',
-        '[class*="ad_"]',
-        '[class*="advertisement"]',
-        '[class*="adsense"]',
-        '[class*="advert"]',
-        '[id*="ad-"]',
-        '[id*="-ad"]',
-        '[id*="_ad"]',
-        '[id*="ad_"]',
-        '.video-ad',
-        '.player-ad',
-        '.pause-ad',
-        'iframe[src*="ad"]',
-        'iframe[src*="advertisement"]'
-    ];
-
-    // ========== 各站点专用选择器 ==========
-    const SITE_AD_SELECTORS = {
-        'youku.com': [
-            '.advertise-layer',
-            '.ad-layer',
-            '.youku-layer-ad',
-            '.yk-ad',
-            '#player_ad',
-            '.player-ad-tips',
-            '.ad-tips',
-            '.h5-ext-ad',
-            '.h5-layer-ad',
-            '.advertise',
-            '.ads-box',
-            '[class*="yk_ad"]',
-            '[class*="adv-"]',
-            '.player-loading-ad',
-            '.video-ad-player'
-        ],
-        'iqiyi.com': [
-            '.iqp-ad',
-            '.cupid-wrap',
-            '.skippable-ad',
-            '.ad-pause',
-            '.qy-ad',
-            '.iqp-ads',
-            '[class*="cupid"]',
-            '[class*="iqp-ad"]',
-            '.iq-adv',
-            '.ad-wrap',
-            '.pause-ad-container',
-            '#flashbox_ads',
-            '.qy-player-ad'
-        ],
-        'qq.com': [
-            '.txp_ad',
-            '.txp_ads',
-            '.ad_area',
-            '#player_pause_ad',
-            '.txp_pause_ad',
-            '.mod_ad',
-            '.ad_center',
-            '[class*="txp_ad"]',
-            '[class*="player_ad"]',
-            '.tvp_ad',
-            '.tvp_overlay_ad',
-            '.pause-ad',
-            '#adPlayer'
-        ],
-        'bilibili.com': [
-            '.ad-report',
-            '.bili-ad',
-            '.video-card-ad-small',
-            '.ad-floor',
-            '.activity-banner',
-            '.ad-m',
-            '[class*="ad-report"]',
-            '.slide-ad-exp',
-            '.video-page-game-card',
-            '.video-page-special-card'
-        ],
-        'mgtv.com': [
-            '.ad-layer',
-            '.mango-ad',
-            '[class*="ad-wrap"]',
-            '.pause-ad',
-            '.video-ad'
-        ],
-        'youtube.com': [
-            '.ytp-ad-module',
-            '.ytp-ad-overlay-slot',
-            '.ytp-ad-text-overlay',
-            '.ytd-display-ad-renderer',
-            '.ytd-promoted-sparkles-web-renderer',
-            '.ytd-companion-slot-renderer',
-            '.ytd-action-companion-ad-renderer',
-            '[class*="ytp-ad"]',
-            '.ytp-ad-skip-button-container',
-            '#player-ads',
-            '.video-ads',
-            '.ytd-banner-promo-renderer',
-            '.ytd-statement-banner-renderer'
-        ],
-        'ixigua.com': [
-            '.ad-wrapper',
-            '.xg-ad',
-            '[class*="ad-layer"]',
-            '.video-ad'
-        ],
-        'sohu.com': [
-            '.ad-layer',
-            '.x-ad',
-            '[class*="sohu-ad"]'
-        ],
-        'acfun.cn': [
-            '.ad-wrapper',
-            '.acfun-ad',
-            '[class*="banner-ad"]'
-        ]
-    };
-
-    // ========== 获取当前站点 ==========
-    function getCurrentSite() {
-        const hostname = location.hostname;
-        for (const site of Object.keys(SITE_AD_SELECTORS)) {
-            if (hostname.includes(site)) {
-                return site;
-            }
-        }
-        return null;
-    }
+    log.info('威软去广告插件 v1.1.0 已加载 - 威软科技制作');
 
     // ========== 检查是否启用 ==========
     let isEnabled = true;
@@ -163,258 +33,350 @@
             });
         }
     }
+    checkEnabled();
 
-    // ========== 检查是否是视频播放器 ==========
-    function isVideoPlayer(element) {
-        const videoTags = ['VIDEO', 'OBJECT', 'EMBED'];
-        if (videoTags.includes(element.tagName)) {
-            return true;
-        }
-        if (element.querySelector('video')) {
-            const classList = element.className.toLowerCase();
-            if (classList.includes('player') && !classList.includes('ad')) {
-                return true;
-            }
-        }
-        return false;
+    // ========== 获取当前站点 ==========
+    function getCurrentSite() {
+        const hostname = location.hostname;
+        if (hostname.includes('youtube.com')) return 'youtube';
+        if (hostname.includes('youku.com')) return 'youku';
+        if (hostname.includes('iqiyi.com')) return 'iqiyi';
+        if (hostname.includes('qq.com')) return 'qq';
+        if (hostname.includes('bilibili.com')) return 'bilibili';
+        if (hostname.includes('mgtv.com')) return 'mgtv';
+        if (hostname.includes('ixigua.com')) return 'ixigua';
+        return 'other';
     }
 
-    // ========== 移除广告元素 ==========
-    function removeAdElements() {
-        if (!isEnabled) return;
+    // ========================================================
+    // YouTube 专用广告处理
+    // ========================================================
+    const YouTubeAdBlocker = {
+        lastAdTime: 0,
+        blockedCount: 0,
 
-        const currentSite = getCurrentSite();
-        const selectors = [...COMMON_AD_SELECTORS];
+        init() {
+            if (!isEnabled) return;
+            log.info('YouTube广告拦截器初始化');
+            this.startMonitoring();
+        },
 
-        if (currentSite && SITE_AD_SELECTORS[currentSite]) {
-            selectors.push(...SITE_AD_SELECTORS[currentSite]);
-        }
+        startMonitoring() {
+            setInterval(() => {
+                if (!isEnabled) return;
+                this.handleAds();
+            }, CONFIG.youtubeCheckInterval);
 
-        let removedCount = 0;
+            const observer = new MutationObserver(() => {
+                if (!isEnabled) return;
+                this.handleAds();
+            });
 
-        selectors.forEach(selector => {
-            try {
+            if (document.body) {
+                observer.observe(document.body, { childList: true, subtree: true });
+            } else {
+                document.addEventListener('DOMContentLoaded', () => {
+                    observer.observe(document.body, { childList: true, subtree: true });
+                });
+            }
+        },
+
+        handleAds() {
+            this.skipAd();
+            this.speedUpAd();
+            this.removeAdOverlays();
+        },
+
+        skipAd() {
+            const skipSelectors = [
+                '.ytp-ad-skip-button',
+                '.ytp-ad-skip-button-modern',
+                '.ytp-skip-ad-button',
+                'button.ytp-ad-skip-button-modern',
+                '.ytp-ad-skip-button-container button',
+                '.videoAdUiSkipButton',
+                '.ytp-ad-skip-button-slot button'
+            ];
+
+            for (const selector of skipSelectors) {
+                const skipButton = document.querySelector(selector);
+                if (skipButton && skipButton.offsetParent !== null) {
+                    skipButton.click();
+                    log.info('已点击跳过广告按钮');
+                    this.reportBlocked();
+                    return true;
+                }
+            }
+            return false;
+        },
+
+        speedUpAd() {
+            const video = document.querySelector('video.html5-main-video');
+            if (!video) return;
+
+            const isAdPlaying = this.isAdPlaying();
+
+            if (isAdPlaying) {
+                const now = Date.now();
+                if (now - this.lastAdTime > 500) {
+                    log.info('检测到广告正在播放，正在跳过...');
+                    this.lastAdTime = now;
+                }
+
+                video.muted = true;
+
+                if (video.duration && isFinite(video.duration)) {
+                    video.currentTime = video.duration;
+                    log.info('已跳转到广告结尾');
+                    this.reportBlocked();
+                }
+
+                if (video.playbackRate !== 16) {
+                    video.playbackRate = 16;
+                    log.info('已将广告播放速度设为16倍');
+                }
+            } else {
+                if (video.playbackRate === 16) {
+                    video.playbackRate = 1;
+                    video.muted = false;
+                    log.info('广告结束，已恢复正常播放');
+                }
+            }
+        },
+
+        isAdPlaying() {
+            const adIndicators = [
+                '.ytp-ad-player-overlay',
+                '.ytp-ad-player-overlay-instream-info',
+                '.ytp-ad-text',
+                '.ytp-ad-preview-container',
+                '.ytp-ad-simple-ad-badge',
+                '.ytp-ad-skip-button-container'
+            ];
+
+            for (const selector of adIndicators) {
+                const el = document.querySelector(selector);
+                if (el && el.offsetParent !== null) {
+                    return true;
+                }
+            }
+
+            const player = document.querySelector('.html5-video-player');
+            if (player && player.classList.contains('ad-showing')) {
+                return true;
+            }
+
+            return false;
+        },
+
+        removeAdOverlays() {
+            const overlaySelectors = [
+                '.ytp-ad-overlay-slot',
+                '.ytp-ad-overlay-container',
+                '.ytp-ad-text-overlay'
+            ];
+
+            overlaySelectors.forEach(selector => {
                 const elements = document.querySelectorAll(selector);
                 elements.forEach(el => {
-                    if (!isVideoPlayer(el)) {
-                        el.style.setProperty('display', 'none', 'important');
-                        el.style.setProperty('visibility', 'hidden', 'important');
-                        el.style.setProperty('opacity', '0', 'important');
-                        el.style.setProperty('pointer-events', 'none', 'important');
-                        el.style.setProperty('height', '0', 'important');
-                        el.style.setProperty('width', '0', 'important');
-                        el.style.setProperty('overflow', 'hidden', 'important');
-                        removedCount++;
+                    if (el.innerHTML.trim()) {
+                        el.innerHTML = '';
+                        this.reportBlocked();
                     }
                 });
-            } catch (e) {
-                log.warn(`选择器错误: ${selector}`);
-            }
-        });
+            });
+        },
 
-        if (removedCount > 0) {
-            log.info(`已隐藏 ${removedCount} 个广告元素`);
-            // 通知background脚本
+        reportBlocked() {
+            this.blockedCount++;
             if (typeof chrome !== 'undefined' && chrome.runtime) {
                 chrome.runtime.sendMessage({
                     type: 'AD_BLOCKED',
-                    count: removedCount,
-                    site: getCurrentSite() || location.hostname
-                });
+                    count: 1,
+                    site: 'youtube.com'
+                }).catch(() => {});
             }
         }
-    }
+    };
 
-    // ========== 跳过YouTube广告 ==========
-    function skipYouTubeAds() {
-        if (!location.hostname.includes('youtube.com')) return;
-        if (!isEnabled) return;
-
-        // 跳过可跳过的广告
-        const skipButton = document.querySelector('.ytp-ad-skip-button, .ytp-ad-skip-button-modern, .ytp-skip-ad-button');
-        if (skipButton) {
-            skipButton.click();
-            log.info('已跳过YouTube广告');
-        }
-
-        // 加速播放不可跳过广告
-        const video = document.querySelector('.html5-main-video');
-        const adDisplay = document.querySelector('.ytp-ad-player-overlay, .ytp-ad-text');
-
-        if (video && adDisplay) {
-            video.playbackRate = 16;
-            video.muted = true;
-            log.info('正在加速跳过YouTube广告');
-        }
-    }
-
-    // ========== 处理视频前贴片广告 ==========
-    function handlePrerollAds() {
-        if (!isEnabled) return;
-
-        const currentSite = getCurrentSite();
-
-        if (currentSite === 'youku.com') {
-            const adPlayer = document.querySelector('.advertise-layer, .ad-layer');
-            if (adPlayer) {
-                adPlayer.remove();
-                log.info('已移除优酷前贴片广告');
-            }
-        }
-
-        if (currentSite === 'iqiyi.com') {
-            const adContainer = document.querySelector('.iqp-ad, .cupid-wrap');
-            if (adContainer) {
-                adContainer.remove();
-                log.info('已移除爱奇艺前贴片广告');
-            }
-            const skipBtn = document.querySelector('[class*="skip"]');
-            if (skipBtn) {
-                skipBtn.click();
-            }
-        }
-
-        if (currentSite === 'qq.com') {
-            const adLayer = document.querySelector('.txp_ad, #adPlayer');
-            if (adLayer) {
-                adLayer.remove();
-                log.info('已移除腾讯视频前贴片广告');
-            }
-        }
-    }
-
-    // ========== 拦截广告请求 ==========
-    function blockAdRequests() {
-        if (!isEnabled) return;
-
-        const adPatterns = [
-            /ads?\./i,
-            /advert/i,
-            /adsense/i,
-            /doubleclick/i,
-            /googlesyndication/i,
-            /pagead/i,
-            /adservice/i,
-            /atm\.youku\.com/i,
-            /irs01\.com/i,
-            /p-log\.ykimg\.com/i,
-            /cupid\.iqiyi\.com/i,
-            /api\.cupid/i,
-            /lives\.l\.qq\.com.*ad/i,
-            /btrace\.qq\.com/i
-        ];
-
-        // 拦截 XMLHttpRequest
-        const originalXHROpen = XMLHttpRequest.prototype.open;
-        XMLHttpRequest.prototype.open = function(method, url, ...args) {
-            if (typeof url === 'string' && adPatterns.some(pattern => pattern.test(url))) {
-                log.info(`已拦截广告请求: ${url.substring(0, 50)}...`);
-                return;
-            }
-            return originalXHROpen.call(this, method, url, ...args);
-        };
-
-        // 拦截 Fetch
-        const originalFetch = window.fetch;
-        window.fetch = function(url, ...args) {
-            if (typeof url === 'string' && adPatterns.some(pattern => pattern.test(url))) {
-                log.info(`已拦截广告Fetch请求: ${url.substring(0, 50)}...`);
-                return Promise.reject(new Error('Ad blocked by 威软去广告'));
-            }
-            return originalFetch.call(this, url, ...args);
-        };
-
-        log.info('已启用广告请求拦截');
-    }
-
-    // ========== MutationObserver 监听DOM变化 ==========
-    function observeDOMChanges() {
-        const observer = new MutationObserver((mutations) => {
+    // ========================================================
+    // 哔哩哔哩专用处理
+    // ========================================================
+    const BilibiliAdBlocker = {
+        init() {
             if (!isEnabled) return;
+            log.info('哔哩哔哩广告拦截器初始化');
+        }
+    };
 
-            let hasNewNodes = false;
-            mutations.forEach(mutation => {
-                if (mutation.addedNodes.length > 0) {
-                    hasNewNodes = true;
+    // ========================================================
+    // 优酷专用处理
+    // ========================================================
+    const YoukuAdBlocker = {
+        init() {
+            if (!isEnabled) return;
+            log.info('优酷广告拦截器初始化');
+            this.startMonitoring();
+        },
+
+        startMonitoring() {
+            setInterval(() => {
+                if (!isEnabled) return;
+                const skipBtn = document.querySelector('.advertise-skip, .skip-ad, [class*="skip"]');
+                if (skipBtn) {
+                    skipBtn.click();
+                    log.info('已跳过优酷广告');
                 }
-            });
+            }, CONFIG.checkInterval);
+        }
+    };
 
-            if (hasNewNodes) {
-                removeAdElements();
-                handlePrerollAds();
-                skipYouTubeAds();
-            }
-        });
+    // ========================================================
+    // 爱奇艺专用处理
+    // ========================================================
+    const IqiyiAdBlocker = {
+        init() {
+            if (!isEnabled) return;
+            log.info('爱奇艺广告拦截器初始化');
+            this.startMonitoring();
+        },
 
-        observer.observe(document.documentElement, {
-            childList: true,
-            subtree: true
-        });
+        startMonitoring() {
+            setInterval(() => {
+                if (!isEnabled) return;
+                const skipBtn = document.querySelector('.skippable-ad-skip, [class*="skip"]');
+                if (skipBtn) {
+                    skipBtn.click();
+                    log.info('已跳过爱奇艺广告');
+                }
+            }, CONFIG.checkInterval);
+        }
+    };
 
-        log.info('已启动DOM变化监听');
-    }
+    // ========================================================
+    // 腾讯视频专用处理
+    // ========================================================
+    const QQVideoAdBlocker = {
+        init() {
+            if (!isEnabled) return;
+            log.info('腾讯视频广告拦截器初始化');
+            this.startMonitoring();
+        },
 
-    // ========== 监听来自popup的消息 ==========
+        startMonitoring() {
+            setInterval(() => {
+                if (!isEnabled) return;
+                const skipBtn = document.querySelector('.txp_ad_skip, [class*="skip"]');
+                if (skipBtn) {
+                    skipBtn.click();
+                    log.info('已跳过腾讯视频广告');
+                }
+            }, CONFIG.checkInterval);
+        }
+    };
+
+    // ========================================================
+    // 通用广告拦截
+    // ========================================================
+    const GenericAdBlocker = {
+        init() {
+            log.info('通用广告拦截器初始化');
+            this.blockAdRequests();
+        },
+
+        blockAdRequests() {
+            const adPatterns = [
+                /doubleclick\.net/i,
+                /googlesyndication\.com/i,
+                /googleadservices\.com/i,
+                /moatads\.com/i,
+                /adnxs\.com/i,
+                /atm\.youku\.com/i,
+                /cupid\.iqiyi\.com/i,
+                /btrace\.qq\.com/i
+            ];
+
+            const originalXHROpen = XMLHttpRequest.prototype.open;
+            XMLHttpRequest.prototype.open = function(method, url, ...args) {
+                if (typeof url === 'string' && adPatterns.some(p => p.test(url))) {
+                    log.info(`已拦截广告请求: ${url.substring(0, 60)}...`);
+                    return;
+                }
+                return originalXHROpen.call(this, method, url, ...args);
+            };
+
+            const originalFetch = window.fetch;
+            window.fetch = function(url, ...args) {
+                const urlStr = typeof url === 'string' ? url : (url && url.url) || '';
+                if (adPatterns.some(p => p.test(urlStr))) {
+                    log.info(`已拦截广告Fetch: ${urlStr.substring(0, 60)}...`);
+                    return Promise.resolve(new Response('', { status: 200 }));
+                }
+                return originalFetch.call(this, url, ...args);
+            };
+
+            log.info('网络请求拦截已启用');
+        }
+    };
+
+    // ========================================================
+    // 监听消息
+    // ========================================================
     function listenForMessages() {
         if (typeof chrome !== 'undefined' && chrome.runtime) {
             chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 if (message.type === 'TOGGLE_ENABLED') {
                     isEnabled = message.enabled;
-                    if (isEnabled) {
-                        removeAdElements();
-                        handlePrerollAds();
-                    }
+                    log.info(`广告拦截已${isEnabled ? '启用' : '禁用'}`);
                     sendResponse({ success: true });
                 }
                 if (message.type === 'GET_STATUS') {
                     sendResponse({
                         enabled: isEnabled,
-                        site: getCurrentSite() || location.hostname
+                        site: getCurrentSite()
                     });
                 }
             });
         }
     }
 
-    // ========== 初始化 ==========
+    // ========================================================
+    // 主初始化
+    // ========================================================
     function init() {
-        log.info('威软去广告插件已加载 - 威软科技制作');
+        const site = getCurrentSite();
+        log.info(`当前站点: ${site}`);
 
-        checkEnabled();
         listenForMessages();
-        blockAdRequests();
+        GenericAdBlocker.init();
 
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', () => {
-                removeAdElements();
-                handlePrerollAds();
-                observeDOMChanges();
-            });
-        } else {
-            removeAdElements();
-            handlePrerollAds();
-            observeDOMChanges();
+        switch (site) {
+            case 'youtube':
+                YouTubeAdBlocker.init();
+                break;
+            case 'bilibili':
+                BilibiliAdBlocker.init();
+                break;
+            case 'youku':
+                YoukuAdBlocker.init();
+                break;
+            case 'iqiyi':
+                IqiyiAdBlocker.init();
+                break;
+            case 'qq':
+                QQVideoAdBlocker.init();
+                break;
+            default:
+                log.info('使用通用广告拦截');
         }
 
-        // 定时检查广告
-        let retries = 0;
-        const checkInterval = setInterval(() => {
-            if (isEnabled) {
-                removeAdElements();
-                handlePrerollAds();
-                skipYouTubeAds();
-            }
-
-            retries++;
-            if (retries >= CONFIG.maxRetries) {
-                clearInterval(checkInterval);
-                log.info('广告检测周期结束');
-            }
-        }, CONFIG.checkInterval);
-
-        log.info('威软去广告已初始化完成');
+        log.info('威软去广告初始化完成 - 威软科技制作');
     }
 
-    init();
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
 
 })();
